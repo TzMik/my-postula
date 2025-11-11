@@ -62,7 +62,7 @@ export default function LandingPage() {
                             Organiza <span className="text-indigo-600">Todas</span> Tus Postulaciones de Empleo
                         </h1>
                         <p className="text-xl text-gray-500 mb-8 max-w-2xl mx-auto">
-                            MyPostula es tu gestor de candidaturas **totalmente gratuito**. Nunca más pierdas el rastro de dónde aplicaste, a qué empresa y cuál es el estado actual de tu proceso.
+                            MyPostula es tu gestor de candidaturas <b>totalmente gratuito</b>. Nunca más pierdas el rastro de dónde aplicaste, a qué empresa y cuál es el estado actual de tu proceso.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
                             <a href="/register" className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-xl shadow-lg text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150 transform hover:scale-[1.02]">
@@ -146,7 +146,7 @@ export default function LandingPage() {
             {/* Pie de Página */}
             <footer className="bg-gray-800 py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
-                    <p>&copy; 2024 MyPostula. Herramienta gratuita de gestión de postulaciones. | <a href="#" className="hover:text-white transition-colors">Términos de Servicio</a></p>
+                    <p>&copy; {new Date().getFullYear()} MyPostula. Herramienta gratuita de gestión de postulaciones. | <a href="#" className="hover:text-white transition-colors">Términos de Servicio</a></p>
                 </div>
             </footer>
         </div>
