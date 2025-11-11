@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎯 Plan de Desarrollo: MyPostula
 
-## Getting Started
+Este documento describe el plan inicial para el desarrollo de un sistema que ayuda a los candidatos a gestionar y hacer seguimiento de sus postulaciones de empleo de manera centralizada.
 
-First, run the development server:
+## 🌟 1. Objetivo del Proyecto (Visión)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Crear una herramienta sencilla, intuitiva y robusta que empodere a los buscadores de empleo, permitiéndoles registrar, rastrear y analizar sus aplicaciones a diferentes empresas, puestos y salarios esperados, cubriendo el vacío de herramientas orientadas al **candidato**.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 2. Fase 1: Planificación y Alcance (MVP)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El enfoque inicial se centra en desarrollar el **Producto Mínimo Viable (MVP)** que cubra la funcionalidad esencial.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2.1. Funcionalidades Clave del MVP
+| Característica | Descripción | Prioridad |
+| :--- | :--- | :--- |
+| **Autenticación Básica** | Registro e Inicio de sesión de usuarios. | **Alta** |
+| **Registro de Postulación** | Formulario para ingresar detalles de una nueva aplicación (Empresa, Puesto, Sueldo, Fecha). | **Alta** |
+| **Tablero de Postulaciones** | Vista principal (lista o kanban) para visualizar todas las entradas. | **Alta** |
+| **Gestión de Estado** | Capacidad para asignar y cambiar el estado de cada postulación (e.g., Postulado, Entrevista, Rechazado). | Media |
+| **CRUD Básico** | Posibilidad de **Crear**, **Leer**, **Actualizar** y **Eliminar** (CRUD) registros. | Alta |
 
-## Learn More
+### 2.2. Usuarios
+* **Usuario Principal:** El candidato/buscador de empleo.
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ 3. Fase 2: Diseño y Tecnología
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3.1. Arquitectura Sugerida
+* **Arquitectura:** **JAMstack/Serverless**. El Frontend (Next.js) es la capa central que maneja la lógica de presentación y se comunica directamente con los servicios Backend gestionados (Supabase).
+* **Principio:** Se elimina la necesidad de desarrollar y mantener una API Backend personalizada (como Flask) para el MVP, usando los servicios automáticos de Supabase.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3.2. Pila Tecnológica (Tech Stack Propuesto)
+| Componente | Tecnología Seleccionada | Razón Clave |
+| :--- | :--- | :--- |
+| **Frontend & Desarrollo** | **Next.js (React)** | Permite Renderizado del Lado del Servidor (SSR) y Static Generation (SSG) para un mejor rendimiento y SEO (aunque menos relevante en esta app privada, es buena práctica). |
+| **Backend & Autenticación** | **Supabase (como Backend as a Service - BaaS)** | Proporciona **Autenticación** y genera una **API RESTful** de forma automática a partir de la DB (PostgreSQL). Elimina el desarrollo de Flask. |
+| **Base de Datos** | **PostgreSQL (gestionada por Supabase)** | Base de datos relacional robusta y escalable. Gestionada, minimizando la administración. |
+| **Alojamiento (Frontend)** | **Vercel** o Netlify | Optimizado para el despliegue de aplicaciones Next.js, con CDN y soporte para SSR. |
+| **Control de Versiones** | **Git / GitHub** | Estándar para el control de versiones del código fuente. |
 
-## Deploy on Vercel
+### 3.3. Modelo de Datos Básico
+Se requiere dos tablas principales para el MVP.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* `Postulacion`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Campo | Tipo de Dato | Requerido | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID/INT | Sí | Identificador único. |
+| `id_usuario` | Foreign Key | Sí | Relación con el usuario que postula. |
+| `id_empresa` | Foreign Key | Sí | Relación con la empresa a la que postula. |
+| `puesto` | VARCHAR | Sí | Título del trabajo (Ej. Desarrollador Frontend). |
+| `sueldo_esperado` | DECIMAL/INT | No | Rango salarial o cifra esperada. |
+| `fecha_postulacion` | DATE/TIMESTAMP | Sí | Día en que se envió el CV. |
+| `estado` | ENUM/VARCHAR | Sí | Estado actual (Postulado, Entrevista, Rechazado, etc.). |
+| `url_oferta` | VARCHAR | No | Enlace a la publicación original. |
+
+* `Empresa`:
+
+| Campo | Tipo de Dato | Requerido | Descripción |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID/INT | Sí | Identificador único. |
+| `Nombre` | VARCHAR | Sí | Nombre de la empresa. |
+
+## Plan de desarrollo
+* [Diseño de tablas](/docs/diseno-tablas.md)
+* [Diseño de endpoints](/docs/diseno-endpoints.md)
+
+## Configuración de entorno local
+* Clonar el repositorio: `git clone https://github.com/KalenaTeam/my-postula.git`
+* Instalar las dependencias: `npm install`
+* Crear variables de entorno local:
+    * Crear el archivo `.env.local` (copiar `.env.example` para tener la plantilla con todas las variables de entorno necesarias para hacer funcionar el proyecto)
+    * Añadir las siguientes variables de entorno:
+    ```bash
+    NEXT_PUBLIC_SUPABASE_URL=[SUPABASE_PROJECT_PUBLIC_URL]
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=[SUPABASE_ANON_KEY]
+    ```
+* Ejecutar el entorno de pruebas: `npm run dev`
+* Entrar en `http://localhost:3000`
