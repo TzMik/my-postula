@@ -16,7 +16,12 @@ const Plus = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="
 const Edit = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5L2 22l1.5-5.5L17 3z"/></svg>);
 const Trash = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>);
 const Briefcase = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>);
-const CheckCircle = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.66-9.15"/><path d="m11 16.5 3.5 3.5L22 13"/></svg>);
+const CheckCircle = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="10"/>
+        <path d="m9 12 3 3L22 7"/>
+    </svg>
+);
 const XCircle = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>);
 const Clock = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
 
@@ -32,9 +37,9 @@ const STATUS_OPTIONS = {
 
 // Mapeo de estilos para los totales
 const COUNT_STYLES = {
-    open: { icon: Clock, bgColor: 'bg-yellow-500', color: 'text-yellow-600', count: 0 },
-    accepted: { icon: CheckCircle, bgColor: 'bg-green-500', color: 'text-green-600', count: 0 },
-    declined: { icon: XCircle, bgColor: 'bg-red-500', color: 'text-red-600', count: 0 },
+    open: { icon: Clock, color: 'text-yellow-600', count: 0 },
+    accepted: { icon: CheckCircle, color: 'text-green-600', count: 0 },
+    declined: { icon: XCircle, color: 'text-red-600', count: 0 },
 };
 
 // --- Componente Modal (Crear/Editar Postulación) ---
@@ -173,14 +178,14 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                     <div>
                         <label htmlFor="position" className="block text-sm font-medium text-gray-700">Posición</label>
                         <input type="text" id="position" name="position" required value={formData.position} onChange={handleChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                            className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
 
                     {/* Selector de Empresa */}
                     <div>
                         <label htmlFor="company_id" className="block text-sm font-medium text-gray-700">Empresa (Existente)</label>
                         <select id="company_id" name="company_id" value={formData.company_id} onChange={handleChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500">
+                            className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="">-- Selecciona Empresa Existente --</option>
                             {allCompanies.map(comp => (
                                 <option key={comp.id} value={comp.id}>{comp.name}</option>
@@ -195,7 +200,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                         <label htmlFor="company_name" className="block text-sm font-medium text-gray-700">Nombre de Nueva Empresa</label>
                         <input type="text" id="company_name" name="company_name" value={formData.company_name} onChange={handleChange}
                             placeholder="Ej. Google o Tesla"
-                            className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                            className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     
                     {/* Fila de Sueldo y Fecha */}
@@ -204,12 +209,12 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                             <label htmlFor="expected_salary" className="block text-sm font-medium text-gray-700">Sueldo Esperado</label>
                             <input type="number" id="expected_salary" name="expected_salary" value={formData.expected_salary} onChange={handleChange}
                                 placeholder="Ej. 30000"
-                                className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                                className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                         </div>
                         <div>
                             <label htmlFor="application_date" className="block text-sm font-medium text-gray-700">Fecha Postulación</label>
                             <input type="date" id="application_date" name="application_date" required value={formData.application_date} onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                                className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                         </div>
                     </div>
 
@@ -217,7 +222,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                     <div>
                         <label htmlFor="status" className="block text-sm font-medium text-gray-700">Estado</label>
                         <select id="status" name="status" required value={formData.status} onChange={handleChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500">
+                            className="mt-1 block w-full border border-gray-300 text-gray-900 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500">
                             {Object.entries(STATUS_OPTIONS).map(([key, value]) => (
                                 <option key={key} value={key}>{value}</option>
                             ))}
@@ -326,20 +331,7 @@ export default function DashboardPage() {
             setUser(currentUser);
 
             // 2. Obtener la lista de empresas (companies)
-            const { data: companiesData, error: companiesError } = await supabase
-                .from('companies') 
-                .select('id, name')
-                .order('name', { ascending: true });
-            
-            if (!isSubscribed) return null;
-
-            if (companiesError) {
-                console.error('Error al cargar empresas:', companiesError);
-                setError('Error al cargar la lista de empresas.');
-                setLoading(false);
-                return null;
-            }
-            setCompanies(companiesData || []);
+            await loadCompanies();
 
             // 3. Suscripción en tiempo real a job_applications
             const postulationsSubscription = supabase
@@ -405,10 +397,13 @@ export default function DashboardPage() {
         setIsModalOpen(true);
     };
 
+    // En DashboardPage, donde defines los manejadores de eventos
     const handleStatusChange = async (postulationId, newStatus) => {
         setError(null);
         if (!user) return;
 
+        // 1. Ejecutar la actualización en Supabase
+        // NOTA: No necesitamos .select() aquí, ya que solo cambiaremos un campo localmente.
         const { error } = await supabase
             .from('job_applications') 
             .update({ status: newStatus })
@@ -418,7 +413,26 @@ export default function DashboardPage() {
         if (error) {
             console.error('Error al actualizar estado:', error);
             setError('No se pudo actualizar el estado.');
-        } 
+            return;
+        }
+
+        // 2. Si es exitoso, actualizar el estado local (Postulations) al instante
+        setPostulations(prevPostulations => {
+            // Mapear la lista anterior para encontrar y actualizar el elemento
+            const updatedPostulations = prevPostulations.map(p => {
+                if (p.id === postulationId) {
+                    // Devolver el objeto actualizado con el nuevo estado
+                    return { ...p, status: newStatus };
+                }
+                return p;
+            });
+
+            // 3. Recalcular los contadores (Totales) con la nueva lista
+            // (La función calculateCounts es necesaria como dependencia en useCallback)
+            calculateCounts(updatedPostulations); 
+
+            return updatedPostulations;
+        });
     };
 
     const handleDelete = async (postulationId) => {
@@ -429,6 +443,7 @@ export default function DashboardPage() {
         }
         if (!user) return;
 
+        // 1. Ejecutar la eliminación en Supabase
         const { error } = await supabase
             .from('job_applications') 
             .delete()
@@ -438,8 +453,35 @@ export default function DashboardPage() {
         if (error) {
             console.error('Error al eliminar:', error);
             setError('No se pudo eliminar la postulación.');
+            return; // Detener si hay error
         }
+
+        // 2. Si la eliminación es exitosa, actualizar el estado local (Postulations) al instante
+        setPostulations(prevPostulations => {
+            // Filtrar la lista anterior para EXCLUIR el elemento eliminado
+            const updatedPostulations = prevPostulations.filter(p => p.id !== postulationId);
+
+            // 3. Recalcular los contadores (Totales) con la nueva lista
+            calculateCounts(updatedPostulations); 
+
+            return updatedPostulations;
+        });
     };
+
+    // En DashboardPage, después de loadPostulations
+    const loadCompanies = useCallback(async () => {
+        const { data: companiesData, error: companiesError } = await supabase
+            .from('companies') 
+            .select('id, name')
+            .order('name', { ascending: true });
+
+        if (companiesError) {
+            console.error('Error al cargar empresas:', companiesError);
+            setError('Error al cargar la lista de empresas.');
+            return;
+        }
+        setCompanies(companiesData || []);
+    }, []); // No tiene dependencias externas
 
     const handleModalSubmit = async (payload, postulationId) => {
         setError(null);
@@ -450,25 +492,79 @@ export default function DashboardPage() {
 
         if (postulationId) {
             // MODO EDICIÓN
-            const { error } = await supabase
+
+            // 1. Ejecutar la actualización en Supabase
+            const { data, error } = await supabase
                 .from('job_applications') 
                 .update(payload)
                 .eq('id', postulationId)
-                .eq('user_id', user.id); 
+                .eq('user_id', user.id)
+                // CLAVE: Solicitamos el registro completo y el nombre de la empresa JOINED
+                .select(`*, companies(name)`) 
+                .single();
 
             if (error) {
                 throw new Error(error.message || 'Error al actualizar la postulación.');
             }
+
+            // 2. Si es exitoso, actualizar el estado local (Postulations) al instante
+            if (data) {
+                const updatedPostulation = {
+                    ...data,
+                    // Formateamos los campos necesarios para la tabla
+                    name: data.companies?.name || 'N/A', 
+                    application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+                };
+
+                setPostulations(prevPostulations => {
+                    const updatedList = prevPostulations.map(p => {
+                        // Si encontramos el registro, lo reemplazamos con el nuevo objeto data
+                        if (p.id === postulationId) {
+                            return updatedPostulation;
+                        }
+                        return p;
+                    });
+
+                    // El estado pudo cambiar (por ejemplo, de 'open' a 'accepted'), recalcular totales.
+                    calculateCounts(updatedList); 
+                    return updatedList;
+                });
+            }
         } else {
             // MODO CREACIÓN
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('job_applications') 
-                .insert([{ ...payload, user_id: user.id }]); 
+                .insert([{ ...payload, user_id: user.id }])
+                // CLAVE: Solicitamos los datos insertados y el nombre de la empresa JOINED
+                .select(`*, companies(name)`) 
+                .single();
 
             if (error) {
                 throw new Error(error.message || 'Error al crear la postulación.');
             }
+
+            // --- INSERCIÓN LOCAL INMEDIATA EN EL ESTADO ---
+            if (data) {
+                const newPostulation = {
+                    ...data,
+                    // Formateamos los campos necesarios para la tabla
+                    name: data.companies?.name || 'N/A', 
+                    application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+                };
+
+                // Agregamos la nueva postulación al estado
+                setPostulations(prev => {
+                    const updatedList = [newPostulation, ...prev];
+                    calculateCounts(updatedList); // Recalculamos los totales
+                    return updatedList;
+                });
+            }
         }
+
+        // **IMPORTANTE:** Recargar empresas (loadCompanies) para que la nueva empresa 
+        // creada en el modal aparezca en el selector la próxima vez.
+        // Esto asume que implementaste el paso 1 de la respuesta anterior.
+        await loadCompanies(); 
     };
 
 
