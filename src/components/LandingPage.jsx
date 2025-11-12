@@ -1,4 +1,5 @@
 "use client";
+import Image from 'next/image';
 
 import React from 'react';
 
@@ -75,11 +76,14 @@ export default function LandingPage() {
                     </div>
                     {/* Placeholder de una imagen del dashboard */}
                     <div className="mt-12 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <img src="https://placehold.co/1200x600/e0e7ff/4338ca?text=Dashboard+de+Postulaciones" 
-                            alt="Captura de pantalla del dashboard de MyPostula" 
+                        <Image 
+                            src="/img/dashboard.png" 
+                            alt="Captura de pantalla del dashboard de MyPostula"
+                            width={1200} // Valor arbitrario basado en el placeholder para establecer relación de aspecto
+                            height={600} // Valor arbitrario basado en el placeholder
                             className="w-full h-auto rounded-xl shadow-2xl border-4 border-white transition duration-500 hover:shadow-indigo-300"
-                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/e0e7ff/4338ca?text=Dashboard+de+Postulaciones+de+Ejemplo'; }} />
-                    </div>
+                            priority // Opcional: Carga la imagen al inicio para mejor LCP
+                        />                    </div>
                 </section>
 
                 {/* Sección 2: Características (Features) */}
