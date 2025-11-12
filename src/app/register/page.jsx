@@ -91,19 +91,13 @@ const Lock = ({ className }) => (
 
 // Icono de éxito (CheckCircle)
 const CheckCircle = ({ className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}>
-      <path d="M22 11.08V12a10 10 0 1 1-5.66-9.15"/><path d="m11 16.5 3.5 3.5L22 13"/>
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="10"/>
+        <path d="m15 9 3 3L22 7"/>
+        <path d="m9 12 3 3L22 7"/>
+        <path d="m9 12 3 3L22 7"/>
+        <path d="M9 12l2 2 4-4"/>
+    </svg>
 );
 
 // Icono de error (AlertTriangle)
@@ -158,6 +152,9 @@ export default function RegisterPage() {
       const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                }
       });
 
       if (error) {
@@ -246,7 +243,7 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-gray-900"
                 placeholder="tu.correo@ejemplo.com"
                 disabled={loading}
               />
@@ -268,7 +265,7 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-gray-900"
                 placeholder="Mínimo 6 caracteres"
                 disabled={loading}
               />
@@ -289,7 +286,7 @@ export default function RegisterPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-gray-900"
                 placeholder="Repite tu contraseña"
                 disabled={loading}
               />
