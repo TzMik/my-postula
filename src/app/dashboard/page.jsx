@@ -1,6 +1,6 @@
 /**
  * Pantalla Principal (Dashboard) para MyPostula.
- * ADAPTADO al esquema: job_applications {position, expected_salary, application_date, status}
+ * ADAPTADO al esquema: job_applications {position, expected_salary, application_date, status, offer_url}
  */
 'use client';
 
@@ -10,20 +10,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/utils/supabase'; // Ahora resuelto gracias al archivo generado
 
 // --- Configuración de Iconos SVG Inline ---
-const Loader2 = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>);
-const LogOut = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>);
-const Plus = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>);
-const Edit = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5L2 22l1.5-5.5L17 3z"/></svg>);
-const Trash = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>);
-const Briefcase = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>);
+const Loader2 = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>);
+const LogOut = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>);
+const Plus = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" x2="12" y1="5" y2="19" /><line x1="5" x2="19" y1="12" y2="12" /></svg>);
+const Edit = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5L2 22l1.5-5.5L17 3z" /></svg>);
+const Trash = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>);
+const Briefcase = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>);
 const CheckCircle = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <circle cx="12" cy="12" r="10"/>
-        <path d="m9 12 3 3L22 7"/>
+        <circle cx="12" cy="12" r="10" />
+        <path d="m9 12 3 3L22 7" />
     </svg>
 );
-const XCircle = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>);
-const Clock = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+const XCircle = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></svg>);
+const Clock = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>);
+// Nuevo icono para el link
+const LinkIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>);
+
 
 // --- Tipos y Constantes ---
 
@@ -37,16 +40,16 @@ const STATUS_OPTIONS = {
 
 // Mapeo de estilos para los totales
 const COUNT_STYLES = {
-    open: { icon: Clock, color: 'text-yellow-600', count: 0 },
-    accepted: { icon: CheckCircle, color: 'text-green-600', count: 0 },
-    declined: { icon: XCircle, color: 'text-red-600', count: 0 },
+    open: { icon: Clock, color: 'text-yellow-600', count: 0, bgColor: 'border-yellow-500' },
+    accepted: { icon: CheckCircle, color: 'text-green-600', count: 0, bgColor: 'border-green-500' },
+    declined: { icon: XCircle, color: 'text-red-600', count: 0, bgColor: 'border-red-500' },
 };
 
 // --- Componente Modal (Crear/Editar Postulación) ---
 
 /**
  * Muestra un modal para crear una nueva postulación o editar una existente.
- * Adaptado a las columnas: position, expected_salary, application_date, status, company_id.
+ * Adaptado a las columnas: position, expected_salary, application_date, status, company_id, offer_url.
  */
 const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCompanies = [] }) => {
     const isEdit = !!postulation;
@@ -56,8 +59,9 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
         expected_salary: postulation?.expected_salary || '',
         application_date: postulation?.application_date || new Date().toISOString().split('T')[0],
         status: postulation?.status || 'open',
-        // Eliminado: offer_url
-        company_id: postulation?.company_id || '', 
+        // AÑADIDO: offer_url
+        offer_url: postulation?.offer_url || '',
+        company_id: postulation?.company_id || '',
         company_name: postulation?.company_name || '', // Campo para la empresa si no existe
     });
     const [loading, setLoading] = useState(false);
@@ -71,9 +75,10 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 expected_salary: postulation.expected_salary || '',
                 application_date: postulation.application_date || new Date().toISOString().split('T')[0],
                 status: postulation.status || 'open',
-                // Eliminado: offer_url
+                // AÑADIDO: offer_url
+                offer_url: postulation.offer_url || '',
                 company_id: postulation.company_id || '',
-                company_name: postulation.name || postulation.company_name || '', 
+                company_name: postulation.name || postulation.company_name || '',
             });
         } else {
             setFormData({
@@ -81,6 +86,8 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 expected_salary: '',
                 application_date: new Date().toISOString().split('T')[0],
                 status: 'open',
+                // AÑADIDO: offer_url
+                offer_url: '',
                 company_id: '',
                 company_name: '',
             });
@@ -107,7 +114,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
             if (!finalCompanyId && formData.company_name) {
                 // Buscar si la empresa ya existe
                 let { data: existingCompany, error: searchError } = await supabase
-                    .from('companies') 
+                    .from('companies')
                     .select('id')
                     .eq('name', formData.company_name)
                     .single();
@@ -121,7 +128,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 } else {
                     // Si no existe, crear nueva empresa
                     const { data: newCompany, error: createError } = await supabase
-                        .from('companies') 
+                        .from('companies')
                         .insert([{ name: formData.company_name }])
                         .select('id')
                         .single();
@@ -146,8 +153,9 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 expected_salary: parseFloat(formData.expected_salary) || null,
                 application_date: formData.application_date,
                 status: formData.status,
-                // Eliminado: offer_url
-                company_id: finalCompanyId, 
+                // AÑADIDO: offer_url (limpiamos el valor si es una cadena vacía)
+                offer_url: formData.offer_url.trim() || null,
+                company_id: finalCompanyId,
             };
 
             // 3. Llamar a la función principal para guardar/actualizar
@@ -181,6 +189,20 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                             className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
 
+                    {/* Campo URL de la Oferta (offer_url) AÑADIDO */}
+                    <div>
+                        <label htmlFor="offer_url" className="block text-sm font-medium text-gray-700">URL de la Oferta (Opcional)</label>
+                        <input
+                            type="url"
+                            id="offer_url"
+                            name="offer_url"
+                            value={formData.offer_url}
+                            onChange={handleChange}
+                            placeholder="Ej. https://www.linkedin.com/jobs/..."
+                            className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
+                        />
+                    </div>
+
                     {/* Selector de Empresa */}
                     <div>
                         <label htmlFor="company_id" className="block text-sm font-medium text-gray-700">Empresa (Existente)</label>
@@ -202,7 +224,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                             placeholder="Ej. Google o Tesla"
                             className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
-                    
+
                     {/* Fila de Sueldo y Fecha */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -281,49 +303,63 @@ export default function DashboardPage() {
      */
     const loadPostulations = useCallback(async (userId) => {
         const { data, error } = await supabase
-            .from('job_applications') 
+            .from('job_applications')
             .select(`
                 *,
                 companies(name) 
             `)
             .eq('user_id', userId)
             // Nuevo ordenamiento: por application_date (en lugar de created_at)
-            .order('application_date', { ascending: false }); 
+            .order('application_date', { ascending: false });
 
         if (error) {
             console.error('Error al cargar postulaciones:', error);
             setError('Error al cargar tus postulaciones.');
             return;
         }
-        
+
         const loadedPostulations = data.map(p => ({
             ...p,
-            name: p.companies?.name || 'N/A', 
+            name: p.companies?.name || 'N/A',
             application_date_formatted: new Date(p.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
         }));
-        
+
         setPostulations(loadedPostulations);
         calculateCounts(loadedPostulations);
     }, [calculateCounts]);
 
+    // En DashboardPage, después de loadPostulations
+    const loadCompanies = useCallback(async () => {
+        const { data: companiesData, error: companiesError } = await supabase
+            .from('companies')
+            .select('id, name')
+            .order('name', { ascending: true });
+
+        if (companiesError) {
+            console.error('Error al cargar empresas:', companiesError);
+            setError('Error al cargar la lista de empresas.');
+            return;
+        }
+        setCompanies(companiesData || []);
+    }, []); // No tiene dependencias externas
 
     /**
      * Hook principal para la inicialización y suscripción.
      */
     useEffect(() => {
         let isSubscribed = true;
-        
+
         const setupData = async () => {
             setError(null);
 
             // 1. Obtener sesión de usuario
             const { data: authData, error: authError } = await supabase.auth.getSession();
-            
-            if (!isSubscribed) return; 
+
+            if (!isSubscribed) return;
 
             if (authError || !authData?.session) {
                 // No hay sesión, redirigir al login
-                window.location.href = '/login'; 
+                window.location.href = '/login';
                 return null;
             }
 
@@ -335,10 +371,10 @@ export default function DashboardPage() {
 
             // 3. Suscripción en tiempo real a job_applications
             const postulationsSubscription = supabase
-                .channel('app_changes') 
+                .channel('app_changes')
                 .on(
-                    'postgres_changes', 
-                    { event: '*', schema: 'public', table: 'job_applications' }, 
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'job_applications' },
                     payload => {
                         if (isSubscribed) {
                             console.log('Cambio en Job Applications:', payload.eventType);
@@ -346,14 +382,14 @@ export default function DashboardPage() {
                         }
                     }
                 )
-                .subscribe((status, err) => { 
+                .subscribe((status, err) => {
                     if (status === 'SUBSCRIBED') {
                         if (isSubscribed) {
                             console.log('Suscripción activa a Job Applications.');
                             // Cargar datos iniciales tras suscripción
                             loadPostulations(currentUser.id).finally(() => {
                                 if (isSubscribed) setLoading(false);
-                            }); 
+                            });
                         }
                     } else if (err) {
                         console.error('Error en la suscripción de Supabase:', err);
@@ -374,10 +410,10 @@ export default function DashboardPage() {
         setupData();
 
         return () => {
-             isSubscribed = false;
+            isSubscribed = false;
         };
 
-    }, [loadPostulations]); 
+    }, [loadPostulations, loadCompanies]);
 
 
     // --- Manejadores de Eventos (Delete/Update/Submit) ---
@@ -388,12 +424,12 @@ export default function DashboardPage() {
     };
 
     const handleNewPostulation = () => {
-        setCurrentPostulation(null); 
+        setCurrentPostulation(null);
         setIsModalOpen(true);
     };
 
     const handleEdit = (postulation) => {
-        setCurrentPostulation(postulation); 
+        setCurrentPostulation(postulation);
         setIsModalOpen(true);
     };
 
@@ -405,10 +441,10 @@ export default function DashboardPage() {
         // 1. Ejecutar la actualización en Supabase
         // NOTA: No necesitamos .select() aquí, ya que solo cambiaremos un campo localmente.
         const { error } = await supabase
-            .from('job_applications') 
+            .from('job_applications')
             .update({ status: newStatus })
             .eq('id', postulationId)
-            .eq('user_id', user.id); 
+            .eq('user_id', user.id);
 
         if (error) {
             console.error('Error al actualizar estado:', error);
@@ -429,7 +465,7 @@ export default function DashboardPage() {
 
             // 3. Recalcular los contadores (Totales) con la nueva lista
             // (La función calculateCounts es necesaria como dependencia en useCallback)
-            calculateCounts(updatedPostulations); 
+            calculateCounts(updatedPostulations);
 
             return updatedPostulations;
         });
@@ -445,10 +481,10 @@ export default function DashboardPage() {
 
         // 1. Ejecutar la eliminación en Supabase
         const { error } = await supabase
-            .from('job_applications') 
+            .from('job_applications')
             .delete()
             .eq('id', postulationId)
-            .eq('user_id', user.id); 
+            .eq('user_id', user.id);
 
         if (error) {
             console.error('Error al eliminar:', error);
@@ -462,26 +498,12 @@ export default function DashboardPage() {
             const updatedPostulations = prevPostulations.filter(p => p.id !== postulationId);
 
             // 3. Recalcular los contadores (Totales) con la nueva lista
-            calculateCounts(updatedPostulations); 
+            calculateCounts(updatedPostulations);
 
             return updatedPostulations;
         });
     };
 
-    // En DashboardPage, después de loadPostulations
-    const loadCompanies = useCallback(async () => {
-        const { data: companiesData, error: companiesError } = await supabase
-            .from('companies') 
-            .select('id, name')
-            .order('name', { ascending: true });
-
-        if (companiesError) {
-            console.error('Error al cargar empresas:', companiesError);
-            setError('Error al cargar la lista de empresas.');
-            return;
-        }
-        setCompanies(companiesData || []);
-    }, []); // No tiene dependencias externas
 
     const handleModalSubmit = async (payload, postulationId) => {
         setError(null);
@@ -490,17 +512,23 @@ export default function DashboardPage() {
             return;
         }
 
+        // Aseguramos que el payload siempre incluya offer_url, aunque sea null, para el update/insert
+        const finalPayload = {
+            ...payload,
+            offer_url: payload.offer_url || null, // Asegura que sea null si está vacío
+        };
+
         if (postulationId) {
             // MODO EDICIÓN
 
             // 1. Ejecutar la actualización en Supabase
             const { data, error } = await supabase
-                .from('job_applications') 
-                .update(payload)
+                .from('job_applications')
+                .update(finalPayload) // Usamos finalPayload
                 .eq('id', postulationId)
                 .eq('user_id', user.id)
                 // CLAVE: Solicitamos el registro completo y el nombre de la empresa JOINED
-                .select(`*, companies(name)`) 
+                .select(`*, companies(name)`)
                 .single();
 
             if (error) {
@@ -512,7 +540,7 @@ export default function DashboardPage() {
                 const updatedPostulation = {
                     ...data,
                     // Formateamos los campos necesarios para la tabla
-                    name: data.companies?.name || 'N/A', 
+                    name: data.companies?.name || 'N/A',
                     application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
                 };
 
@@ -526,17 +554,17 @@ export default function DashboardPage() {
                     });
 
                     // El estado pudo cambiar (por ejemplo, de 'open' a 'accepted'), recalcular totales.
-                    calculateCounts(updatedList); 
+                    calculateCounts(updatedList);
                     return updatedList;
                 });
             }
         } else {
             // MODO CREACIÓN
             const { data, error } = await supabase
-                .from('job_applications') 
-                .insert([{ ...payload, user_id: user.id }])
+                .from('job_applications')
+                .insert([{ ...finalPayload, user_id: user.id }]) // Usamos finalPayload
                 // CLAVE: Solicitamos los datos insertados y el nombre de la empresa JOINED
-                .select(`*, companies(name)`) 
+                .select(`*, companies(name)`)
                 .single();
 
             if (error) {
@@ -548,7 +576,7 @@ export default function DashboardPage() {
                 const newPostulation = {
                     ...data,
                     // Formateamos los campos necesarios para la tabla
-                    name: data.companies?.name || 'N/A', 
+                    name: data.companies?.name || 'N/A',
                     application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
                 };
 
@@ -563,8 +591,7 @@ export default function DashboardPage() {
 
         // **IMPORTANTE:** Recargar empresas (loadCompanies) para que la nueva empresa 
         // creada en el modal aparezca en el selector la próxima vez.
-        // Esto asume que implementaste el paso 1 de la respuesta anterior.
-        await loadCompanies(); 
+        await loadCompanies();
     };
 
 
@@ -582,14 +609,14 @@ export default function DashboardPage() {
     if (!user) {
         return null;
     }
-    
+
     const totalCount = postulations.length;
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
             <header className="flex flex-col sm:flex-row justify-between items-center pb-6 border-b border-gray-200 mb-6">
                 <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center">
-                    <Briefcase className="w-8 h-8 text-indigo-600 mr-3"/>
+                    <Briefcase className="w-8 h-8 text-indigo-600 mr-3" />
                     MyPostula Dashboard
                 </h1>
                 <div className="flex items-center space-x-4 mt-4 sm:mt-0">
@@ -626,7 +653,7 @@ export default function DashboardPage() {
                     </div>
                     <p className="mt-1 text-3xl font-bold text-gray-900">{totalCount}</p>
                 </div>
-                
+
                 {/* Tarjetas por Estado */}
                 {Object.entries(counts).map(([key, { icon: Icon, bgColor, color, count }]) => (
                     <div key={key} className={`bg-white rounded-2xl shadow-lg p-5 border-b-4 ${bgColor}`}>
@@ -644,16 +671,16 @@ export default function DashboardPage() {
                 <div className="p-5 border-b border-gray-200">
                     <h2 className="text-xl font-semibold text-gray-800">Listado de Postulaciones ({postulations.length})</h2>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
-                                {/* Cambiado Puesto por Posición */}
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posición</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sueldo Esperado</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th> {/* Nuevo encabezado */}
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
@@ -661,7 +688,7 @@ export default function DashboardPage() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {postulations.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                                    <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
                                         No tienes postulaciones registradas. ¡Empieza añadiendo una!
                                     </td>
                                 </tr>
@@ -670,12 +697,22 @@ export default function DashboardPage() {
                                     <tr key={p.id} className="hover:bg-gray-50 transition duration-100">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{p.name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            {/* Usamos 'position' en lugar de 'job_title'. Eliminada la lógica de link a offer_url */}
                                             {p.position}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.application_date_formatted}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {p.expected_salary ? `$${parseFloat(p.expected_salary).toLocaleString('es-ES')}` : 'N/A'}
+                                        </td>
+                                        {/* NUEVA CELDA PARA offer_url */}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {p.offer_url ? (
+                                                <a href={p.offer_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 flex items-center">
+                                                    Ver Oferta
+                                                    <LinkIcon className="w-4 h-4 ml-1" />
+                                                </a>
+                                            ) : (
+                                                'N/A'
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <select
