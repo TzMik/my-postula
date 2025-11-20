@@ -184,7 +184,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
 
                     {/* Campo Posición (position) */}
                     <div>
-                        <label htmlFor="position" className="block text-sm font-medium text-gray-700">Posición</label>
+                        <label htmlFor="position" className="block text-sm font-medium text-gray-700">Puesto de trabajo</label>
                         <input type="text" id="position" name="position" required value={formData.position} onChange={handleChange}
                             className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
