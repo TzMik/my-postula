@@ -73,7 +73,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 // Renombrado: job_title -> position
                 position: postulation.position || '',
                 expected_salary: postulation.expected_salary || '',
-                application_date: postulation.application_date || new Date().toISOString().split('T')[0],
+                application_date: postulation.application_date ? postulation.application_date.split('T')[0] : new Date().toISOString().split('T')[0],
                 status: postulation.status || 'open',
                 // AÑADIDO: offer_url
                 offer_url: postulation.offer_url || '',
