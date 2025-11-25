@@ -1,13 +1,11 @@
 /**
  * Pantalla Principal (Dashboard) para MyPostula.
- * ADAPTADO al esquema: job_applications {position, expected_salary, application_date, status, offer_url}
+ * ADAPTADO al esquema: job_applications {position, expected_salary, application_date, status, offer_url, salary_currency}
  */
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-// Importación del cliente de Supabase usando importación POR DEFECTO
-// CORRECCIÓN: Se eliminó '.js' de la importación para resolver el error de compilación.
-import { supabase } from '@/utils/supabase'; // Ahora resuelto gracias al archivo generado
+import { supabase } from '@/utils/supabase';
 
 // --- Configuración de Iconos SVG Inline ---
 const Loader2 = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>);
@@ -56,9 +54,9 @@ const COUNT_STYLES = {
 
 /**
  * Muestra un modal para crear una nueva postulación o editar una existente.
- * Adaptado a las columnas: position, expected_salary, application_date, status, company_id, offer_url.
+ * Adaptado a las columnas: position, expected_salary, application_date, status, company_id, offer_url, salary_currency.
  */
-const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCompanies = [] }) => {
+const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCompanies = [], currencies = [] }) => {
     const isEdit = !!postulation;
     const [formData, setFormData] = useState({
         position: postulation?.position || '',
@@ -71,6 +69,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
         job_type: postulation?.job_type || 'na',
         city: postulation?.city || '',
         country: postulation?.country || '',
+        salary_currency: postulation?.salary_currency || '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -80,7 +79,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
             setFormData({
                 position: postulation.position || '',
                 expected_salary: postulation.expected_salary || '',
-                application_date: postulation.application_date || new Date().toISOString().split('T')[0],
+                application_date: postulation.application_date ? postulation.application_date.split('T')[0] : new Date().toISOString().split('T')[0],
                 status: postulation.status || 'open',
                 offer_url: postulation.offer_url || '',
                 company_id: postulation.company_id || '',
@@ -88,6 +87,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 job_type: postulation.job_type || 'na',
                 city: postulation.city || '',
                 country: postulation.country || '',
+                salary_currency: postulation.salary_currency || '',
             });
         } else {
             setFormData({
@@ -101,6 +101,7 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 job_type: 'na',
                 city: '',
                 country: '',
+                salary_currency: '',
             });
         }
     }, [postulation]);
@@ -119,11 +120,9 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
         setLoading(true);
 
         try {
-            // 1. Validar o Crear Empresa (companies)
             let finalCompanyId = formData.company_id;
 
             if (!finalCompanyId && formData.company_name) {
-                // Buscar si la empresa ya existe
                 let { data: existingCompany, error: searchError } = await supabase
                     .from('companies')
                     .select('id')
@@ -137,7 +136,6 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 if (existingCompany) {
                     finalCompanyId = existingCompany.id;
                 } else {
-                    // Si no existe, crear nueva empresa
                     const { data: newCompany, error: createError } = await supabase
                         .from('companies')
                         .insert([{ name: formData.company_name }])
@@ -157,7 +155,6 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 return;
             }
 
-            // 2. Preparar los datos de la postulación
             const payload = {
                 position: formData.position,
                 expected_salary: parseFloat(formData.expected_salary) || null,
@@ -168,11 +165,11 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 job_type: formData.job_type,
                 city: formData.city.trim() || null,
                 country: formData.country.trim() || null,
+                salary_currency: formData.salary_currency || null,
             };
 
-            // 3. Llamar a la función principal para guardar/actualizar
             await onSubmit(payload, postulation?.id);
-            onClose(); // Cerrar al finalizar
+            onClose();
         } catch (err) {
             console.error('Error en el modal al guardar:', err);
             setError(err.message || 'Ocurrió un error al guardar la postulación.');
@@ -193,10 +190,9 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
 
                 <form onSubmit={handleFormSubmit} className="mt-4 space-y-4">
                     {error && <div className="p-3 text-sm bg-red-100 text-red-700 rounded-lg">{error}</div>}
-
                     {/* Campo Posición (position) */}
                     <div>
-                        <label htmlFor="position" className="block text-sm font-medium text-gray-700">Posición</label>
+                        <label htmlFor="position" className="block text-sm font-medium text-gray-700">Puesto de trabajo</label>
                         <input type="text" id="position" name="position" required value={formData.position} onChange={handleChange}
                             className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
@@ -232,7 +228,6 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                         />
                     </div>
 
-                    {/* Selector de Empresa */}
                     <div>
                         <label htmlFor="company_id" className="block text-sm font-medium text-gray-700">Empresa (Existente)</label>
                         <select id="company_id" name="company_id" value={formData.company_id} onChange={handleChange}
@@ -246,7 +241,6 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
 
                     <div className="text-center text-gray-500 text-sm">-- O --</div>
 
-                    {/* Campo Empresa Nueva */}
                     <div>
                         <label htmlFor="company_name" className="block text-sm font-medium text-gray-700">Nombre de Nueva Empresa</label>
                         <input type="text" id="company_name" name="company_name" value={formData.company_name} onChange={handleChange}
@@ -254,13 +248,24 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                             className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
 
-                    {/* Fila de Sueldo y Fecha */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="expected_salary" className="block text-sm font-medium text-gray-700">Sueldo Esperado</label>
-                            <input type="number" id="expected_salary" name="expected_salary" value={formData.expected_salary} onChange={handleChange}
-                                placeholder="Ej. 30000"
-                                className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                        <div className="flex gap-2">
+                            <div className="flex-1">
+                                <label htmlFor="expected_salary" className="block text-sm font-medium text-gray-700">Sueldo Esperado</label>
+                                <input type="number" id="expected_salary" name="expected_salary" value={formData.expected_salary} onChange={handleChange}
+                                    placeholder="Ej. 30000"
+                                    className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                            </div>
+                            <div className="w-1/3">
+                                <label htmlFor="salary_currency" className="block text-sm font-medium text-gray-700">Divisa</label>
+                                <select id="salary_currency" name="salary_currency" value={formData.salary_currency} onChange={handleChange}
+                                    className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="">--</option>
+                                    {currencies.map(curr => (
+                                        <option key={curr.id} value={curr.id}>{curr.iso_code}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label htmlFor="application_date" className="block text-sm font-medium text-gray-700">Fecha Postulación</label>
@@ -316,6 +321,7 @@ export default function DashboardPage() {
     const [user, setUser] = useState(null);
     const [postulations, setPostulations] = useState([]);
     const [companies, setCompanies] = useState([]);
+    const [currencies, setCurrencies] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPostulation, setCurrentPostulation] = useState(null); // Postulación a editar
     const [error, setError] = useState(null);
@@ -344,9 +350,10 @@ export default function DashboardPage() {
         const { data, error } = await supabase
             .from('job_applications')
             .select(`
-*,
-companies(name) 
-`)
+                *,
+                companies(name),
+                currencies!salary_currency(symbol, iso_code)
+            `)
             .eq('user_id', userId)
             // Nuevo ordenamiento: por application_date (en lugar de created_at)
             .order('application_date', { ascending: false });
@@ -362,6 +369,8 @@ companies(name)
             name: p.companies?.name || 'N/A',
             application_date_formatted: new Date(p.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }),
             job_type_formatted: JOB_TYPE_OPTIONS[p.job_type] || 'N/A',
+            currency_symbol: p.currencies?.symbol || '$',
+            currency_iso: p.currencies?.iso_code || ''
         }));
 
         setPostulations(loadedPostulations);
@@ -382,6 +391,20 @@ companies(name)
         }
         setCompanies(companiesData || []);
     }, []); // No tiene dependencias externas
+
+    const loadCurrencies = useCallback(async () => {
+        const { data, error } = await supabase
+            .from('currencies')
+            .select('id, iso_code')
+            .order('iso_code', { ascending: true });
+
+        if (error) {
+            console.error('Error al cargar divisas:', error);
+            return;
+        }
+        console.log(data);
+        setCurrencies(data || []);
+    }, []);
 
     /**
      * Hook principal para la inicialización y suscripción.
@@ -408,6 +431,7 @@ companies(name)
 
             // 2. Obtener la lista de empresas (companies)
             await loadCompanies();
+            await loadCurrencies();
 
             // 3. Suscripción en tiempo real a job_applications
             const postulationsSubscription = supabase
@@ -453,7 +477,7 @@ companies(name)
             isSubscribed = false;
         };
 
-    }, [loadPostulations, loadCompanies]);
+    }, [loadPostulations, loadCompanies, loadCurrencies]);
 
 
     // --- Manejadores de Eventos (Delete/Update/Submit) ---
@@ -568,7 +592,7 @@ companies(name)
                 .eq('id', postulationId)
                 .eq('user_id', user.id)
                 // CLAVE: Solicitamos el registro completo y el nombre de la empresa JOINED
-                .select(`*, companies(name)`)
+                .select(`*, companies(name), currencies!salary_currency(symbol, iso_code)`)
                 .single();
 
             if (error) {
@@ -581,7 +605,9 @@ companies(name)
                     ...data,
                     // Formateamos los campos necesarios para la tabla
                     name: data.companies?.name || 'N/A',
-                    application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+                    application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }),
+                    currency_symbol: data.currencies?.symbol || '$',
+                    currency_iso: data.currencies?.iso_code || ''
                 };
 
                 setPostulations(prevPostulations => {
@@ -604,7 +630,7 @@ companies(name)
                 .from('job_applications')
                 .insert([{ ...finalPayload, user_id: user.id }]) // Usamos finalPayload
                 // CLAVE: Solicitamos los datos insertados y el nombre de la empresa JOINED
-                .select(`*, companies(name)`)
+                .select(`*, companies(name), currencies!salary_currency(symbol, iso_code)`)
                 .single();
 
             if (error) {
@@ -617,7 +643,9 @@ companies(name)
                     ...data,
                     // Formateamos los campos necesarios para la tabla
                     name: data.companies?.name || 'N/A',
-                    application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+                    application_date_formatted: new Date(data.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }),
+                    currency_symbol: data.currencies?.symbol || '$',
+                    currency_iso: data.currencies?.iso_code || ''
                 };
 
                 // Agregamos la nueva postulación al estado
@@ -629,7 +657,7 @@ companies(name)
             }
         }
 
-        // **IMPORTANTE:** Recargar empresas (loadCompanies) para que la nueva empresa 
+        // **IMPORTANTE:** Recargar empresas (loadCompanies) para que la nueva empresa
         // creada en el modal aparezca en el selector la próxima vez.
         await loadCompanies();
     };
@@ -735,7 +763,7 @@ companies(name)
                                     postulations.map((p) => (
                                         <tr key={p.id} className="hover:bg-gray-50 transition duration-100">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {p.offer_url ? 
+                                                {p.offer_url ?
                                                     (
                                                         <a href={p.offer_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 flex items-center">
                                                             <b>{p.position}</b>
@@ -751,8 +779,8 @@ companies(name)
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.application_date_formatted}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {p.expected_salary ? `$${parseFloat(p.expected_salary).toLocaleString('es-ES')}` : 'N/A'}
-                                            </td>
+                                                {p.expected_salary ? `${p.currency_symbol}${parseFloat(p.expected_salary).toLocaleString('es-ES')} ${p.currency_iso}` : 'N/A'}
+                                                </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <select
                                                     value={p.status}
@@ -802,6 +830,7 @@ ${p.status === 'open' && 'bg-yellow-100 text-yellow-800 border-yellow-300'}
                 onSubmit={handleModalSubmit}
                 postulation={currentPostulation}
                 allCompanies={companies}
+                currencies={currencies}
             />
         </div>
     );
