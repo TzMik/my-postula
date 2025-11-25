@@ -38,6 +38,13 @@ const STATUS_OPTIONS = {
     declined: 'Rechazada',
 };
 
+const JOB_TYPE_OPTIONS = {
+    hybrid: 'Híbrido',
+    remote: 'Remoto',
+    onsite: 'Presencial',
+    na: 'No Definido',
+};
+
 // Mapeo de estilos para los totales
 const COUNT_STYLES = {
     open: { icon: Clock, color: 'text-yellow-600', count: 0, bgColor: 'border-yellow-500' },
@@ -54,15 +61,16 @@ const COUNT_STYLES = {
 const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCompanies = [] }) => {
     const isEdit = !!postulation;
     const [formData, setFormData] = useState({
-        // Renombrado: job_title -> position
         position: postulation?.position || '',
         expected_salary: postulation?.expected_salary || '',
         application_date: postulation?.application_date || new Date().toISOString().split('T')[0],
         status: postulation?.status || 'open',
-        // AÑADIDO: offer_url
         offer_url: postulation?.offer_url || '',
         company_id: postulation?.company_id || '',
-        company_name: postulation?.company_name || '', // Campo para la empresa si no existe
+        company_name: postulation?.company_name || '',
+        job_type: postulation?.job_type || 'na',
+        city: postulation?.city || '',
+        country: postulation?.country || '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -70,15 +78,16 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
     useEffect(() => {
         if (postulation) {
             setFormData({
-                // Renombrado: job_title -> position
                 position: postulation.position || '',
                 expected_salary: postulation.expected_salary || '',
                 application_date: postulation.application_date || new Date().toISOString().split('T')[0],
                 status: postulation.status || 'open',
-                // AÑADIDO: offer_url
                 offer_url: postulation.offer_url || '',
                 company_id: postulation.company_id || '',
                 company_name: postulation.name || postulation.company_name || '',
+                job_type: postulation.job_type || 'na',
+                city: postulation.city || '',
+                country: postulation.country || '',
             });
         } else {
             setFormData({
@@ -86,10 +95,12 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                 expected_salary: '',
                 application_date: new Date().toISOString().split('T')[0],
                 status: 'open',
-                // AÑADIDO: offer_url
                 offer_url: '',
                 company_id: '',
                 company_name: '',
+                job_type: 'na',
+                city: '',
+                country: '',
             });
         }
     }, [postulation]);
@@ -148,14 +159,15 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
 
             // 2. Preparar los datos de la postulación
             const payload = {
-                // Renombrado: job_title -> position
                 position: formData.position,
                 expected_salary: parseFloat(formData.expected_salary) || null,
                 application_date: formData.application_date,
                 status: formData.status,
-                // AÑADIDO: offer_url (limpiamos el valor si es una cadena vacía)
                 offer_url: formData.offer_url.trim() || null,
                 company_id: finalCompanyId,
+                job_type: formData.job_type,
+                city: formData.city.trim() || null,
+                country: formData.country.trim() || null,
             };
 
             // 3. Llamar a la función principal para guardar/actualizar
@@ -187,6 +199,23 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                         <label htmlFor="position" className="block text-sm font-medium text-gray-700">Posición</label>
                         <input type="text" id="position" name="position" required value={formData.position} onChange={handleChange}
                             className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Campo Ciudad (city) */}
+                        <div>
+                            <label htmlFor="city" className="block text-sm font-medium text-gray-700">Ciudad</label>
+                            <input type="text" id="city" name="city" value={formData.city} onChange={handleChange}
+                                placeholder="Ej. Madrid"
+                                className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                        </div>
+                        {/* Campo País (country) */}
+                        <div>
+                            <label htmlFor="country" className="block text-sm font-medium text-gray-700">País</label>
+                            <input type="text" id="country" name="country" value={formData.country} onChange={handleChange}
+                                placeholder="Ej. España"
+                                className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500" />
+                        </div>
                     </div>
 
                     {/* Campo URL de la Oferta (offer_url) AÑADIDO */}
@@ -240,6 +269,16 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                         </div>
                     </div>
 
+                    <div>
+                        <label htmlFor="job_type" className="block text-sm font-medium text-gray-700">Tipo de Empleo</label>
+                        <select id="job_type" name="job_type" required value={formData.job_type} onChange={handleChange}
+                            className="mt-1 block w-full border border-gray-300 text-gray-900 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500">
+                            {Object.entries(JOB_TYPE_OPTIONS).map(([key, value]) => (
+                                <option key={key} value={key}>{value}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     {/* Campo Estado */}
                     <div>
                         <label htmlFor="status" className="block text-sm font-medium text-gray-700">Estado</label>
@@ -259,10 +298,10 @@ const PostulationModal = ({ isOpen, onClose, onSubmit, postulation = null, allCo
                         {loading ? (
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         ) : isEdit ? (
-                            'Guardar Cambios'
-                        ) : (
-                            'Crear Postulación'
-                        )}
+                                'Guardar Cambios'
+                            ) : (
+                                    'Crear Postulación'
+                                )}
                     </button>
                 </form>
             </div>
@@ -305,9 +344,9 @@ export default function DashboardPage() {
         const { data, error } = await supabase
             .from('job_applications')
             .select(`
-                *,
-                companies(name) 
-            `)
+*,
+companies(name) 
+`)
             .eq('user_id', userId)
             // Nuevo ordenamiento: por application_date (en lugar de created_at)
             .order('application_date', { ascending: false });
@@ -321,7 +360,8 @@ export default function DashboardPage() {
         const loadedPostulations = data.map(p => ({
             ...p,
             name: p.companies?.name || 'N/A',
-            application_date_formatted: new Date(p.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+            application_date_formatted: new Date(p.application_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }),
+            job_type_formatted: JOB_TYPE_OPTIONS[p.job_type] || 'N/A',
         }));
 
         setPostulations(loadedPostulations);
@@ -371,32 +411,32 @@ export default function DashboardPage() {
 
             // 3. Suscripción en tiempo real a job_applications
             const postulationsSubscription = supabase
-                .channel('app_changes')
-                .on(
-                    'postgres_changes',
-                    { event: '*', schema: 'public', table: 'job_applications' },
-                    payload => {
-                        if (isSubscribed) {
-                            console.log('Cambio en Job Applications:', payload.eventType);
-                            loadPostulations(currentUser.id); // Recargar datos
-                        }
+            .channel('app_changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'job_applications' },
+                payload => {
+                    if (isSubscribed) {
+                        console.log('Cambio en Job Applications:', payload.eventType);
+                        loadPostulations(currentUser.id); // Recargar datos
                     }
-                )
-                .subscribe((status, err) => {
-                    if (status === 'SUBSCRIBED') {
-                        if (isSubscribed) {
-                            console.log('Suscripción activa a Job Applications.');
-                            // Cargar datos iniciales tras suscripción
-                            loadPostulations(currentUser.id).finally(() => {
-                                if (isSubscribed) setLoading(false);
-                            });
-                        }
-                    } else if (err) {
-                        console.error('Error en la suscripción de Supabase:', err);
-                        setError('Error de conexión en tiempo real.');
-                        if (isSubscribed) setLoading(false);
+                }
+            )
+            .subscribe((status, err) => {
+                if (status === 'SUBSCRIBED') {
+                    if (isSubscribed) {
+                        console.log('Suscripción activa a Job Applications.');
+                        // Cargar datos iniciales tras suscripción
+                        loadPostulations(currentUser.id).finally(() => {
+                            if (isSubscribed) setLoading(false);
+                        });
                     }
-                });
+                } else if (err) {
+                    console.error('Error en la suscripción de Supabase:', err);
+                    setError('Error de conexión en tiempo real.');
+                    if (isSubscribed) setLoading(false);
+                }
+            });
 
             // Retorna la función de limpieza (unsubscribe)
             return () => {
@@ -676,11 +716,10 @@ export default function DashboardPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posición</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vacante</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sueldo Esperado</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th> {/* Nuevo encabezado */}
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
@@ -693,64 +732,64 @@ export default function DashboardPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                postulations.map((p) => (
-                                    <tr key={p.id} className="hover:bg-gray-50 transition duration-100">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{p.name}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            {p.position}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.application_date_formatted}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {p.expected_salary ? `$${parseFloat(p.expected_salary).toLocaleString('es-ES')}` : 'N/A'}
-                                        </td>
-                                        {/* NUEVA CELDA PARA offer_url */}
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {p.offer_url ? (
-                                                <a href={p.offer_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 flex items-center">
-                                                    Ver Oferta
-                                                    <LinkIcon className="w-4 h-4 ml-1" />
-                                                </a>
-                                            ) : (
-                                                'N/A'
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <select
-                                                value={p.status}
-                                                onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                                                className={`py-1.5 px-3 rounded-xl border border-gray-300 shadow-sm text-sm font-medium focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
-                                                    ${p.status === 'accepted' && 'bg-green-100 text-green-800 border-green-300'}
-                                                    ${p.status === 'declined' && 'bg-red-100 text-red-800 border-red-300'}
-                                                    ${p.status === 'interview' && 'bg-blue-100 text-blue-800 border-blue-300'}
-                                                    ${p.status === 'open' && 'bg-yellow-100 text-yellow-800 border-yellow-300'}
-                                                `}
-                                            >
-                                                {Object.entries(STATUS_OPTIONS).map(([key, value]) => (
-                                                    <option key={key} value={key}>{value}</option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex space-space-2">
-                                                <button
-                                                    onClick={() => handleEdit(p)}
-                                                    className="text-indigo-600 hover:text-indigo-900 p-2 rounded-full hover:bg-indigo-50 transition-colors"
-                                                    title="Editar"
+                                    postulations.map((p) => (
+                                        <tr key={p.id} className="hover:bg-gray-50 transition duration-100">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {p.offer_url ? 
+                                                    (
+                                                        <a href={p.offer_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 flex items-center">
+                                                            <b>{p.position}</b>
+                                                            <LinkIcon className="w-4 h-4 ml-1" />
+                                                        </a>
+                                                    ) : (<><b>{p.position}</b><br/></>)}
+                                                {p.name}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {p.city && p.country ? `${p.city}, ${p.country}` : p.city || p.country || 'N/A'}
+                                                <br/>
+                                                ({p.job_type_formatted})
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.application_date_formatted}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {p.expected_salary ? `$${parseFloat(p.expected_salary).toLocaleString('es-ES')}` : 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <select
+                                                    value={p.status}
+                                                    onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                                                    className={`py-1.5 px-3 rounded-xl border border-gray-300 shadow-sm text-sm font-medium focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
+${p.status === 'accepted' && 'bg-green-100 text-green-800 border-green-300'}
+${p.status === 'declined' && 'bg-red-100 text-red-800 border-red-300'}
+${p.status === 'interview' && 'bg-blue-100 text-blue-800 border-blue-300'}
+${p.status === 'open' && 'bg-yellow-100 text-yellow-800 border-yellow-300'}
+`}
                                                 >
-                                                    <Edit className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(p.id)}
-                                                    className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition-colors"
-                                                    title="Eliminar"
-                                                >
-                                                    <Trash className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                                                    {Object.entries(STATUS_OPTIONS).map(([key, value]) => (
+                                                        <option key={key} value={key}>{value}</option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div className="flex space-space-2">
+                                                    <button
+                                                        onClick={() => handleEdit(p)}
+                                                        className="text-indigo-600 hover:text-indigo-900 p-2 rounded-full hover:bg-indigo-50 transition-colors"
+                                                        title="Editar"
+                                                    >
+                                                        <Edit className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(p.id)}
+                                                        className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition-colors"
+                                                        title="Eliminar"
+                                                    >
+                                                        <Trash className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                         </tbody>
                     </table>
                 </div>
