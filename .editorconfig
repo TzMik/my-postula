@@ -1,0 +1,51 @@
+# http://editorconfig.org
+
+# *************************************************************
+# CONFIGURACIÓN GLOBAL (Aplicada a todos los archivos)
+# *************************************************************
+root = true
+
+[*]
+# Establece el estilo del final de línea a 'lf' (Unix/Linux), 
+# que es el estándar para proyectos web (Git lo manejará bien).
+end_of_line = lf
+
+# Asegura que siempre haya una línea en blanco al final de cada archivo.
+insert_final_newline = true
+
+# Quita los espacios en blanco que sobran al final de las líneas.
+trim_trailing_whitespace = true
+
+# *************************************************************
+# ESTILOS PARA CÓDIGO JS, JSX, TS, TSX, JSON, ETC.
+# (Archivos que manejan lógica y componentes)
+# *************************************************************
+[*.{js,jsx,ts,tsx,json,jsonc}]
+# Usa 2 espacios para la sangría, que es el estándar en muchos 
+# proyectos de JavaScript y React.
+indent_style = space
+indent_size = 2
+
+# *************************************************************
+# ESTILOS PARA MARKDOWN Y DOCUMENTACIÓN
+# *************************************************************
+[*.md]
+# Permite tabulaciones o un ancho de sangría mayor si se prefiere.
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = false
+
+# *************************************************************
+# ESTILOS PARA ARCHIVOS DE CONFIGURACIÓN Y CSS/SCSS
+# *************************************************************
+[*.{css,scss,less,html,vue,yaml,yml,mdx}]
+# Usa 2 espacios como estándar para estos archivos también.
+indent_style = space
+indent_size = 2
+
+# *************************************************************
+# ESTILOS ESPECÍFICOS PARA ARCHIVOS QUE USAN TABULACIONES
+# *************************************************************
+[Makefile]
+# Los Makefiles requieren tabulaciones.
+indent_style = tab
