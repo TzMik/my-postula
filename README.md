@@ -76,3 +76,11 @@ Se requiere dos tablas principales para el MVP.
     ```
 * Ejecutar el entorno de pruebas: `npm run dev`
 * Entrar en `http://localhost:3000`
+
+
+Idea para siguientes versiones
+
+1. Perfil profesional
+2. Obtener datos de empleos de otras plataformas
+3. Creacion de CV
+4. Creacion de postulaciones directamente desde mypostula
