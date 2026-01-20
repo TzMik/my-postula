@@ -49,5 +49,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anon
 
 ## Documentacion
 - [Base de datos](/docs/diseno-tablas.md)
-- [Endpoints](/docs/diseno-tablas.md)
 - [Ideas para siguientes versiones](/docs/ideas-futuras.md)
