@@ -3,5 +3,5 @@ export interface Currency {
     name: string;
     symbol: string;
     iso_code: string;
-    created_at: number;
+    created_at?: number;
 }
