@@ -12,5 +12,5 @@ export interface User {
     default_country?: string;
     language?: string;
     theme_preference?: string;
-    created_at?: number;
+    created_at?: string;
 }
