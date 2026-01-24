@@ -1,5 +1,7 @@
 import { supabase } from '@/utils/supabase';
-import { PostulationList, Company, Postulation } from '@/types';
+import { PostulationList, Company } from '@/types';
+import { SetStateAction } from 'react';
+import { Dispatch } from 'react';
 
 // Centralizamos el formateo aquí
 const formatPostulation = (p: any): PostulationList => ({
@@ -57,12 +59,12 @@ export const PostulationService = {
     return data;
   },
 
-  handleNewPostulation(editPostulation: (postulation: Postulation | null) => void, editModalOpen: (open: boolean) => void) {
-    editPostulation(null);
+  handleNewPostulation(editPostulation: Dispatch<SetStateAction<PostulationList | undefined>>, editModalOpen: (open: boolean) => void) {
+    editPostulation(undefined);
     editModalOpen(true);
   },
 
-  handleEdit(editPostulation: (postulation: Postulation | null) => void, editModalOpen: (open: boolean) => void, postulation: Postulation) {
+  handleEdit(editPostulation: Dispatch<SetStateAction<PostulationList | undefined>>, editModalOpen: (open: boolean) => void, postulation: PostulationList) {
     editPostulation(postulation);
     editModalOpen(true);
   },

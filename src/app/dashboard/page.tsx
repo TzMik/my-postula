@@ -1,7 +1,3 @@
-/**
- * Pantalla Principal (Dashboard) para MyPostula.
- * ADAPTADO al esquema: job_applications {position, expected_salary, application_date, status, offer_url, salary_currency}
- */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -21,11 +17,11 @@ import {
 } from "lucide-react";
 import PostulationModal from "@/components/PostulationModal";
 
-import { STATUS_OPTIONS, JOB_TYPE_OPTIONS } from "@/utils/constants";
+import { STATUS_OPTIONS, JOB_TYPE_OPTIONS, SALARY_FRECUENCY_OPTIONS } from "@/utils/constants";
 
 import { PostulationService } from "@/services/postulations";
 import { Auth } from "@/services/auth";
-import { Postulation, UserSupabase } from "@/types";
+import { Postulation, PostulationList, UserSupabase } from "@/types";
 
 // --- Tipos y Constantes ---
 
@@ -56,11 +52,11 @@ const COUNT_STYLES = {
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserSupabase | null>(null);
-  const [postulations, setPostulations] = useState<Postulation[]>([]);
-  const [companies, setCompanies] = useState([]);
-  const [currencies, setCurrencies] = useState([]);
+  const [postulations, setPostulations] = useState<PostulationList[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [currencies, setCurrencies] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentPostulation, setCurrentPostulation] = useState(null); // Postulación a editar
+  const [currentPostulation, setCurrentPostulation] = useState<PostulationList | undefined>(undefined); // Postulación a editar
   const [error, setError] = useState<string | null>(null);
 
   // Mapeo de totales (Estado y contador)
@@ -111,8 +107,12 @@ export default function DashboardPage() {
       console.log(currentUser);
 
       // 2. Obtener la lista de empresas (companies)
-      await PostulationService.getCompanies();
-      await PostulationService.getCurrencies();
+      await PostulationService.getCompanies().then((data) => {
+        setCompanies(data);
+      });
+      await PostulationService.getCurrencies().then((data) => {
+        setCurrencies(data);
+      });
 
       // 3. Suscripción en tiempo real a job_applications
       const postulationsSubscription = subscribeToPostulations(
@@ -149,11 +149,7 @@ export default function DashboardPage() {
     return () => {
       isSubscribed = false;
     };
-  }, [
-    PostulationService.getAllByUserId,
-    PostulationService.getCompanies,
-    PostulationService.getCurrencies,
-  ]);
+  }, [calculateCounts]);
 
   // --- Manejadores de Eventos (Delete/Update/Submit) ---
 
@@ -195,7 +191,7 @@ export default function DashboardPage() {
     });
   };
 
-  const handleDelete = async (postulationId) => {
+  const handleDelete = async (postulationId: number): Promise<PostulationList | void> => {
     setError(null);
     // NOTA: Usar custom modal en producción
     if (
@@ -232,115 +228,6 @@ export default function DashboardPage() {
 
       return updatedPostulations;
     });
-  };
-
-  const handleModalSubmit = async (payload, postulationId) => {
-    setError(null);
-    if (!user) {
-      setError("Usuario no autenticado.");
-      return;
-    }
-
-    // Aseguramos que el payload siempre incluya offer_url, aunque sea null, para el update/insert
-    const finalPayload = {
-      ...payload,
-      offer_url: payload.offer_url || null, // Asegura que sea null si está vacío
-    };
-
-    if (postulationId) {
-      // MODO EDICIÓN
-
-      // 1. Ejecutar la actualización en Supabase
-      const { data, error } = await supabase
-        .from("job_applications")
-        .update(finalPayload) // Usamos finalPayload
-        .eq("id", postulationId)
-        .eq("user_id", user.id)
-        // CLAVE: Solicitamos el registro completo y el nombre de la empresa JOINED
-        .select(
-          `*, companies(name), currencies!salary_currency(symbol, iso_code)`,
-        )
-        .single();
-
-      if (error) {
-        throw new Error(error.message || "Error al actualizar la postulación.");
-      }
-
-      // 2. Si es exitoso, actualizar el estado local (Postulations) al instante
-      if (data) {
-        const updatedPostulation = {
-          ...data,
-          // Formateamos los campos necesarios para la tabla
-          name: data.companies?.name || "N/A",
-          application_date_formatted: new Date(
-            data.application_date,
-          ).toLocaleDateString("es-ES", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          }),
-          currency_symbol: data.currencies?.symbol || "$",
-          currency_iso: data.currencies?.iso_code || "",
-        };
-
-        setPostulations((prevPostulations) => {
-          const updatedList = prevPostulations.map((p) => {
-            // Si encontramos el registro, lo reemplazamos con el nuevo objeto data
-            if (p.id === postulationId) {
-              return updatedPostulation;
-            }
-            return p;
-          });
-
-          // El estado pudo cambiar (por ejemplo, de 'open' a 'accepted'), recalcular totales.
-          calculateCounts(updatedList);
-          return updatedList;
-        });
-      }
-    } else {
-      // MODO CREACIÓN
-      const { data, error } = await supabase
-        .from("job_applications")
-        .insert([{ ...finalPayload, user_id: user.id }]) // Usamos finalPayload
-        // CLAVE: Solicitamos los datos insertados y el nombre de la empresa JOINED
-        .select(
-          `*, companies(name), currencies!salary_currency(symbol, iso_code)`,
-        )
-        .single();
-
-      if (error) {
-        throw new Error(error.message || "Error al crear la postulación.");
-      }
-
-      // --- INSERCIÓN LOCAL INMEDIATA EN EL ESTADO ---
-      if (data) {
-        const newPostulation = {
-          ...data,
-          // Formateamos los campos necesarios para la tabla
-          name: data.companies?.name || "N/A",
-          application_date_formatted: new Date(
-            data.application_date,
-          ).toLocaleDateString("es-ES", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          }),
-          currency_symbol: data.currencies?.symbol || "$",
-          currency_iso: data.currencies?.iso_code || "",
-        };
-
-        // Agregamos la nueva postulación al estado
-        setPostulations((prev) => {
-          const updatedList = [newPostulation, ...prev];
-          calculateCounts(updatedList); // Recalculamos los totales
-          return updatedList;
-        });
-      }
-    }
-
-    // **IMPORTANTE:** Recargar empresas (loadCompanies) para que la nueva empresa
-    // creada en el modal aparezca en el selector la próxima vez.
-    await loadCompanies();
   };
 
   // --- Renderizado ---
@@ -416,7 +303,7 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-500">
-                  {STATUS_OPTIONS[key]}
+                  {STATUS_OPTIONS[key as keyof typeof STATUS_OPTIONS]}
                 </p>
                 <Icon className={`w-6 h-6 ${color}`} />
               </div>
@@ -462,7 +349,7 @@ export default function DashboardPage() {
               {postulations.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan={7}
                     className="px-6 py-4 text-center text-sm text-gray-500"
                   >
                     No tienes postulaciones registradas. ¡Empieza añadiendo una!
@@ -497,14 +384,14 @@ export default function DashboardPage() {
                       {p.city && p.country
                         ? `${p.city}, ${p.country}`
                         : p.city || p.country || "N/A"}
-                      <br />({JOB_TYPE_OPTIONS[p.job_type]})
+                      <br />({p.job_type ? JOB_TYPE_OPTIONS[p.job_type as keyof typeof JOB_TYPE_OPTIONS] : "N/A"})
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatApplicationDate(p.application_date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {p.expected_salary
-                        ? `${p.currency?.symbol || ""}${parseFloat(p.expected_salary).toLocaleString("es-ES")} ${p.currency?.iso_code || ""}`
+                        ? `${p.currency?.symbol || ""}${p.expected_salary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${p.currency?.iso_code || ""} ${p.salary_frecuency ? SALARY_FRECUENCY_OPTIONS[p.salary_frecuency as keyof typeof SALARY_FRECUENCY_OPTIONS] : ""}`
                         : "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -528,7 +415,7 @@ ${p.status === "open" && "bg-yellow-100 text-yellow-800 border-yellow-300"}
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex space-space-2">
+                      <div className="flex space-x-2">
                         <button
                           onClick={() => PostulationService.handleEdit(setCurrentPostulation, setIsModalOpen, p)}
                           className="text-indigo-600 hover:text-indigo-900 p-2 rounded-full hover:bg-indigo-50 transition-colors"
@@ -557,10 +444,11 @@ ${p.status === "open" && "bg-yellow-100 text-yellow-800 border-yellow-300"}
       <PostulationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleModalSubmit}
         postulation={currentPostulation}
         allCompanies={companies}
         currencies={currencies}
+        user={user}
+        onPostulationSaved={() => setIsModalOpen(false)}
       />
     </div>
   );

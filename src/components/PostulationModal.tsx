@@ -7,104 +7,74 @@ import {
   JOB_TYPE_OPTIONS,
   SALARY_FRECUENCY_OPTIONS,
 } from "@/utils/constants";
-import { Company, Postulation, Currency } from "@/types";
+import { Company, PostulationList, Currency, UserSupabase } from "@/types";
+import { PostulationService } from "@/services/postulations";
 
 interface PostulationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
-  postulation?: Postulation;
+  postulation?: PostulationList;
   allCompanies?: Company[];
   currencies?: Currency[];
+  user: UserSupabase | null;
+  onPostulationSaved: () => void;
 }
 
-const emptyPostulation: Postulation = {
-  position: "",
-  application_date: "",
-  status: "",
-  offer_url: "",
-  job_type: "",
-  city: "",
-  country: "",
-  salary_frecuency: "",
+type CompanyOption = {
+  value: number;
+  label: string;
+  __isNew__?: boolean;
+};
+
+const emptyPostulation: Partial<PostulationList> = {
+  application_date: new Date().toISOString().split("T")[0],
 };
 
 const PostulationModal = ({
   isOpen,
   onClose,
-  onSubmit,
   postulation,
   allCompanies,
   currencies,
+  user,
+  onPostulationSaved,
 }: PostulationModalProps) => {
   const isEdit = !!postulation;
-  const [formData, setFormData] = useState({
-    position: postulation?.position || "",
-    expected_salary: postulation?.expected_salary || "",
-    application_date:
-      postulation?.application_date || new Date().toISOString().split("T")[0],
-    status: postulation?.status || "open",
-    offer_url: postulation?.offer_url || "",
-    company_id: postulation?.company_id || "",
-    job_type: postulation?.job_type || "na",
-    city: postulation?.city || "",
-    country: postulation?.country || "",
-    salary_currency: postulation?.salary_currency || "",
-    salary_frecuency: postulation?.salary_frecuency || "",
-  });
+  const [formData, setFormData] = useState<Partial<PostulationList>>(postulation || emptyPostulation);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const initialCompany = allCompanies?.find(
     (c) => c.id === postulation?.company_id,
   );
-  const [selectedCompany, setSelectedCompany] = useState(
+  const [selectedCompany, setSelectedCompany] = useState<CompanyOption | null>(
     initialCompany
       ? { value: initialCompany.id, label: initialCompany.name }
       : null,
   );
+
   useEffect(() => {
     if (postulation) {
-      setFormData({
-        position: postulation.position || "",
-        expected_salary: postulation.expected_salary || "",
-        application_date: postulation.application_date
-          ? postulation.application_date.split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        status: postulation.status || "open",
-        offer_url: postulation.offer_url || "",
-        company_id: postulation.company_id || "",
-        job_type: postulation.job_type || "na",
-        city: postulation.city || "",
-        country: postulation.country || "",
-        salary_currency: postulation.salary_currency || "",
-        salary_frecuency: postulation.salary_frecuency || "",
-      });
+      setFormData(postulation);
+      // Find the company from allCompanies array using company_id
+      const company = allCompanies?.find(c => c.id === postulation.company_id);
+      if (company) {
+        setSelectedCompany({ value: company.id, label: company.name });
+      }
     } else {
-      setFormData({
-        position: "",
-        expected_salary: "",
-        application_date: new Date().toISOString().split("T")[0],
-        status: "open",
-        offer_url: "",
-        company_id: "",
-        job_type: "na",
-        city: "",
-        country: "",
-        salary_currency: "",
-        salary_frecuency: "",
-      });
+      setFormData(emptyPostulation);
+      setSelectedCompany(null);
     }
-  }, [postulation]);
+  }, [postulation, allCompanies]);
 
   if (!isOpen) return null;
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError(null);
   };
 
-  const handleCompanyChange = (newValue: any) => {
+  const handleCompanyChange = (newValue: CompanyOption | null) => {
     setSelectedCompany(newValue);
     setError(null);
   };
@@ -155,7 +125,49 @@ const PostulationModal = ({
     }),
   };
 
-  const handleFormSubmit = async (e: any) => {
+  const handleModalSubmit = async (payload: PostulationList, postulationId: number) => {
+    setError(null);
+    if (!user) {
+      setError("Usuario no autenticado.");
+      return;
+    }
+
+    // Aseguramos que el payload siempre incluya offer_url, aunque sea null, para el update/insert
+    const finalPayload = {
+      ...payload,
+      offer_url: payload.offer_url || null, // Asegura que sea null si está vacío
+    };
+
+    if (postulationId) {
+      // MODO EDICIÓN
+      const { error } = await supabase
+        .from("job_applications")
+        .update(finalPayload)
+        .eq("id", postulationId)
+        .eq("user_id", user.id);
+
+      if (error) {
+        throw new Error(error.message || "Error al actualizar la postulación.");
+      }
+    } else {
+      // MODO CREACIÓN
+      const { error } = await supabase
+        .from("job_applications")
+        .insert([{ ...finalPayload, user_id: user.id }]);
+
+      if (error) {
+        throw new Error(error.message || "Error al crear la postulación.");
+      }
+    }
+
+    // **IMPORTANTE:** Recargar empresas (loadCompanies) para que la nueva empresa
+    // creada en el modal aparezca en el selector la próxima vez.
+    await PostulationService.getCompanies();
+    
+    onPostulationSaved();
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -170,7 +182,7 @@ const PostulationModal = ({
       let finalCompanyId;
       let companyName = selectedCompany.label;
 
-      if ((selectedCompany as any).__isNew__) {
+      if (selectedCompany.__isNew__) {
         let { data: existingCompany, error: searchError } = await supabase
           .from("companies")
           .select("id")
@@ -204,22 +216,21 @@ const PostulationModal = ({
       }
 
       // 2. Preparar los datos de la postulación
+      // Excluir campos que no pertenecen a la tabla job_applications
+      const { company_name, currency, ...validFormData } = formData as any;
       const payload = {
-        position: formData.position,
-        expected_salary: formData.expected_salary || null,
-        application_date: formData.application_date,
-        status: formData.status,
-        offer_url: formData.offer_url.trim() || null,
-        company_id: finalCompanyId, // Usamos el ID final
-        job_type: formData.job_type,
-        city: formData.city.trim() || null,
-        country: formData.country.trim() || null,
-        salary_currency: formData.salary_currency || null,
+        ...validFormData,
+        company_id: finalCompanyId,
       };
 
       // 3. Llamar a la función principal para guardar/actualizar
-      await onSubmit(payload);
-      onClose(); // Cerrar al finalizar
+      await handleModalSubmit(payload, postulation?.id || 0);
+      
+      // 4. Resetear el formulario y cerrar
+      setFormData(emptyPostulation);
+      setSelectedCompany(null);
+      setError(null);
+      onClose();
     } catch (err) {
       const error = err as Error;
       console.error("Error en el modal al guardar:", error);
@@ -264,7 +275,7 @@ const PostulationModal = ({
                 id="position"
                 name="position"
                 required
-                value={formData.position}
+                value={formData.position || ""}
                 onChange={handleChange}
                 className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
               />
@@ -305,7 +316,7 @@ const PostulationModal = ({
                 type="text"
                 id="city"
                 name="city"
-                value={formData.city}
+                value={formData.city || ""}
                 onChange={handleChange}
                 placeholder="Ej. Madrid"
                 className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
@@ -323,7 +334,7 @@ const PostulationModal = ({
                 type="text"
                 id="country"
                 name="country"
-                value={formData.country}
+                value={formData.country || ""}
                 onChange={handleChange}
                 placeholder="Ej. España"
                 className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
@@ -343,7 +354,7 @@ const PostulationModal = ({
               type="url"
               id="offer_url"
               name="offer_url"
-              value={formData.offer_url}
+              value={formData.offer_url || ""}
               onChange={handleChange}
               placeholder="Ej. https://www.linkedin.com/jobs/..."
               className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
@@ -363,7 +374,7 @@ const PostulationModal = ({
                   type="number"
                   id="expected_salary"
                   name="expected_salary"
-                  value={formData.expected_salary}
+                  value={formData.expected_salary || ""}
                   onChange={handleChange}
                   placeholder="Ej. 30000"
                   className="mt-1 block text-gray-900 w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
@@ -379,7 +390,7 @@ const PostulationModal = ({
                 <select
                   id="salary_currency"
                   name="salary_currency"
-                  value={formData.salary_currency}
+                  value={formData.salary_currency || ""}
                   onChange={handleChange}
                   className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
                 >
@@ -394,15 +405,15 @@ const PostulationModal = ({
             </div>
             <div>
               <label
-                htmlFor="salary_period"
+                htmlFor="salary_frecuency"
                 className="block text-sm font-medium text-gray-700"
               >
                 Frecuencia
               </label>
               <select
-                id="salary_period"
-                name="salary_period"
-                value={formData.salary_frecuency}
+                id="salary_frecuency"
+                name="salary_frecuency"
+                value={formData.salary_frecuency || ""}
                 onChange={handleChange}
                 className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
               >
@@ -429,7 +440,7 @@ const PostulationModal = ({
                 id="job_type"
                 name="job_type"
                 required
-                value={formData.job_type}
+                value={formData.job_type || ""}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 text-gray-900 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
               >
@@ -452,7 +463,7 @@ const PostulationModal = ({
                 id="status"
                 name="status"
                 required
-                value={formData.status}
+                value={formData.status || ""}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 text-gray-900 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
               >
@@ -476,7 +487,7 @@ const PostulationModal = ({
               type="date"
               id="application_date"
               name="application_date"
-              value={formData.application_date}
+              value={formData.application_date || ""}
               onChange={handleChange}
               className="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg shadow-sm p-2.5 focus:border-indigo-500 focus:ring-indigo-500"
             />
