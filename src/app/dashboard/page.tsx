@@ -76,7 +76,7 @@ export default function DashboardPage() {
       (p) => p.status === "accepted",
     ).length;
     newCounts.declined.count = postulationsList.filter(
-      (p) => p.status === "declined",
+      (p) => p.status === "declined" || p.status === "expired",
     ).length;
     setCounts(newCounts);
   }, []);
@@ -228,6 +228,22 @@ export default function DashboardPage() {
 
       return updatedPostulations;
     });
+  };
+
+  const setStatusSelectColor = (status: string) => {
+    switch (status) {
+      case "open":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      case "interview":
+        return "bg-blue-100 text-blue-800 border-blue-300";
+      case "accepted":
+        return "bg-green-100 text-green-800 border-green-300";
+      case "declined":
+      case "expired":
+        return "bg-red-100 text-red-800 border-red-300";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-300";
+    }
   };
 
   // --- Renderizado ---
@@ -400,12 +416,7 @@ export default function DashboardPage() {
                         onChange={(e) =>
                           handleStatusChange(p.id, e.target.value)
                         }
-                        className={`py-1.5 px-3 rounded-xl border border-gray-300 shadow-sm text-sm font-medium focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
-${p.status === "accepted" && "bg-green-100 text-green-800 border-green-300"}
-${p.status === "declined" && "bg-red-100 text-red-800 border-red-300"}
-${p.status === "interview" && "bg-blue-100 text-blue-800 border-blue-300"}
-${p.status === "open" && "bg-yellow-100 text-yellow-800 border-yellow-300"}
-`}
+                        className={`py-1.5 px-3 rounded-xl border border-gray-300 shadow-sm text-sm font-medium focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ${setStatusSelectColor(p.status)}`}
                       >
                         {Object.entries(STATUS_OPTIONS).map(([key, value]) => (
                           <option key={key} value={key}>

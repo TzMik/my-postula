@@ -3,6 +3,7 @@ export const STATUS_OPTIONS = {
   interview: "Entrevista",
   accepted: "Aceptada",
   declined: "Rechazada",
+  expired: "Expirada",
 };
 
 export const JOB_TYPE_OPTIONS = {
