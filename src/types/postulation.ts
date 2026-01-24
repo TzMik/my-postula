@@ -1,3 +1,5 @@
+import { Currency } from "./currency";
+
 export interface Postulation {
   id: number;
   user_id: string;
